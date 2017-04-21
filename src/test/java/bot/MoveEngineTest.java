@@ -21,6 +21,23 @@ public class MoveEngineTest
 		assertEquals("First move should always be in the middle", move, 3);
 	}
 
+	/**
+	 * Sometimes the opponent doesn't go for the middle so make sure we still do
+	 * even if the board is not empty
+	 */
+	@Test
+	public void testGoForTheMiddle()
+	{
+		Field field = new Field(7, 6);
+		field.parseFromString(
+				"0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,0,0,0,1,0");
+		int move = mover.makeTurn(2, field, 2);
+		System.out.println(move);
+
+		assertEquals("Should go for first row in middle column if available",
+				move, 3);
+	}	
+	
 	@Test
 	public void testOffensiveWin()
 	{

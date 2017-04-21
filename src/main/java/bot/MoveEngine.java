@@ -28,8 +28,9 @@ public class MoveEngine
 	public int makeTurn(int round, Field field, int myId)
 	{
 		// Default to middle column if empty
-		int move = Math.floorDiv(field.getNrColumns(), 2);
-		if (!field.isEmpty())
+		int middleColumn = Math.floorDiv(field.getNrColumns(), 2);
+		int move = middleColumn;
+		if (field.getDisc(middleColumn, field.getNrRows() - 1) != 0)
 		{
 			move = minimax(DEPTH, field, myId);
 		}
