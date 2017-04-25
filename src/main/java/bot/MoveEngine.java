@@ -101,7 +101,9 @@ public class MoveEngine
 	}
 
 	/**
-	 * Get a list of possible moves for this board state
+	 * Get a list of possible moves for this board state. Work from the centre
+	 * column outwards since in the case of a tied position score the central
+	 * columns tend to result in more ways to win.
 	 * 
 	 * @param field
 	 * @return
@@ -109,13 +111,29 @@ public class MoveEngine
 	private List<Integer> getValidMoves(Field field)
 	{
 		List<Integer> moves = new ArrayList<Integer>();
-		for (int move = 0; move < field.getNrColumns(); move++)
+
+		int middleColumn = Math.floorDiv(field.getNrColumns(), 2);
+		if (field.isValidMove(middleColumn))
 		{
-			if (field.isValidMove(move))
-			{
-				moves.add(new Integer(move));
-			}
+			moves.add(new Integer(middleColumn));
 		}
+
+		int moveLeft = middleColumn - 1;
+		int moveRight = middleColumn + 1;
+		while (moveLeft >= 0)
+		{
+			if (field.isValidMove(moveLeft))
+			{
+				moves.add(new Integer(moveLeft));
+			}
+			if (field.isValidMove(moveRight))
+			{
+				moves.add(new Integer(moveRight));
+			}
+			moveLeft -= 1;
+			moveRight += 1;
+		}
+
 		return moves;
 	}
 
