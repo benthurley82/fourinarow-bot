@@ -36,14 +36,15 @@ public class MoveEngineTest
 
 		assertEquals("Should go for first row in middle column if available",
 				move, 3);
-	}	
-	
+	}
+
 	@Test
 	public void testOffensiveWin()
 	{
 		Field field = new Field(7, 6);
 		field.parseFromString(
 				"0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,0,0,0,0,0;2,2,2,0,0,0,0;2,1,1,1,0,0,0");
+		field.printField();
 		int move = mover.makeTurn(8, field, 1);
 		System.out.println(move);
 
@@ -56,11 +57,12 @@ public class MoveEngineTest
 		Field field = new Field(7, 6);
 		field.parseFromString(
 				"0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,0,0,0,0,0;2,2,0,0,0,0,0;2,1,1,1,0,0,0");
+		field.printField();
 		int move = mover.makeTurn(7, field, 2);
 		System.out.println(move);
 
-		assertEquals("Needs to go in column 4 to block player 1 winning", move,
-				4);
+		assertEquals("Needs to go in column 4 to block player 1 winning", 4,
+				move);
 
 	}
 
@@ -70,10 +72,11 @@ public class MoveEngineTest
 		Field field = new Field(7, 6);
 		field.parseFromString(
 				"0,0,0,0,0,0,0;0,1,0,2,1,2,0;0,2,0,2,2,1,0;0,1,0,1,2,1,0;2,2,0,1,1,1,2;1,2,0,1,1,2,2");
+		field.printField();
 		int move = mover.makeTurn(24, field, 1);
 		System.out.println(move);
 
-		assertEquals("Needs to go in column 0 to setup the win", move, 0);
+		assertEquals("Needs to go in column 3 to setup the win", 3, move);
 	}
 
 	@Test

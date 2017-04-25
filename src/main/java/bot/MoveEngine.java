@@ -13,7 +13,7 @@ public class MoveEngine
 {
 
 	private FieldScorer			rating				= new FieldScorer();
-	private static final int	DEPTH				= 5;
+	private static final int	DEPTH				= 6;
 	private static final int	MAXIMISING_PLAYER	= 1;
 	private static final int	MINIMISING_PLAYER	= 2;
 
@@ -54,11 +54,10 @@ public class MoveEngine
 		int bestMove = -1;
 
 		// If depth=0 or end of game then return the score
-		int currentScore = rating.scoreField(field, MAXIMISING_PLAYER);
-		if (depth == 0 || field.isFull() || currentScore >= 10000
-				|| currentScore <= -10000)
+		FieldScore currentScore = rating.scoreField(field, MAXIMISING_PLAYER);
+		if (depth == 0 || field.isFull() || currentScore.hasWinner())
 		{
-			bestScore = currentScore;
+			bestScore = currentScore.getScore();
 		}
 		else
 		{

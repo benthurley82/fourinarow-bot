@@ -25,9 +25,10 @@ public class FieldScorer
 	 * @param player
 	 * @return
 	 */
-	public int scoreField(Field field, int player)
+	public FieldScore scoreField(Field field, int player)
 	{
 		int score = 0;
+		boolean hasWinner = false;
 
 		// Loop through each position on the board
 		for (int x = 0; x < field.getNrColumns(); x++)
@@ -40,13 +41,13 @@ public class FieldScorer
 				// game score
 				if (positionScore >= 10000 || positionScore <= -10000)
 				{
-					return positionScore;
+					hasWinner = true;
 				}
 				score += positionScore;
 			}
 		}
 
-		return score;
+		return new FieldScore(score, hasWinner);
 	}
 
 	/**
