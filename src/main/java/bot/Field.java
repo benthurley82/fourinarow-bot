@@ -297,4 +297,16 @@ public class Field
 	{
 		return mRows;
 	}
+
+	/**
+	 * Prints the field to stderr
+	 */
+	public void printField()
+	{
+		String[] rows = this.toString().split(";");
+		for (String row : rows)
+		{
+			System.err.println(row);
+		}
+	}
 }
