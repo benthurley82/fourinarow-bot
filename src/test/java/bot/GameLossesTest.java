@@ -42,8 +42,8 @@ public class GameLossesTest
 		System.out.println(move);
 
 		assertEquals(
-				"Need to go in column 3 to block player 2 setting up the win",
-				3, move);
+				"Need to go in column 2 to block player 2 setting up the win",
+				2, move);
 	}
 
 	@Test
@@ -69,8 +69,10 @@ public class GameLossesTest
 		int move = mover.makeTurn(18, field, 2);
 		System.out.println(move);
 
-		assertEquals("Need to go in column 5 to setup a win and block opponent",
-				5, move);
+		assertNotEquals("Need to go in column 2 or 5", 0, move);
+		assertNotEquals("Need to go in column 2 or 5", 1, move);
+		assertNotEquals("Need to go in column 2 or 5", 3, move);
+		assertNotEquals("Need to go in column 2 or 5", 4, move);
 	}
 
 	@Test
@@ -83,7 +85,7 @@ public class GameLossesTest
 		int move = mover.makeTurn(19, field, 1);
 		System.out.println(move);
 
-		assertNotEquals("Don't go in column 2 which is easily blocked", 2,
+		assertEquals("Need to go in column 2 to stop the opponent winning", 2,
 				move);
 	}
 
@@ -97,10 +99,8 @@ public class GameLossesTest
 		int move = mover.makeTurn(24, field, 2);
 		System.out.println(move);
 
-		assertNotEquals("Don't go in column 2 which allows opponent to win", 2,
-				move);
-		assertNotEquals("Don't go in column 5 which allows opponent to win", 5,
-				move);
+		assertEquals("Need to go in column 5", 5, move);
+
 	}
 
 	@Test
@@ -181,7 +181,7 @@ public class GameLossesTest
 		int move = mover.makeTurn(10, field, 2);
 		System.out.println(move);
 
-		assertEquals("Need to go in column 4", 4, move);
+		assertEquals("Need to go in column 5", 5, move);
 	}
 
 }

@@ -55,8 +55,19 @@ public class MoveEngine
 
 		// If depth=0 or end of game then return the score
 		FieldScore currentScore = rating.scoreField(field, MAXIMISING_PLAYER);
-		if (depth == 0 || field.isFull() || currentScore.hasWinner())
+		if (currentScore.hasWinner())
 		{
+			// Wins are weighted to a shallower depth or more immediate win
+			bestScore = depth * currentScore.getScore();
+		}
+		else if (field.isFull())
+		{
+			// A draw is neutral
+			bestScore = 0;
+		}
+		else if (depth == 0)
+		{
+			// Reached the bottom of the tree so return score of this node
 			bestScore = currentScore.getScore();
 		}
 		else
