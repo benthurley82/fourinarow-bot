@@ -12,14 +12,11 @@ package bot;
 public class FieldScorer
 {
 
-	// We're aiming for 4 in a row
-	private static final int TARGET = 4;
+	private static final int	MAXIMISING_PLAYER	= 1;
+	private static final int	FOUR_SCORE			= 100000;
 
 	/**
-	 * Simple heuristic function to evaluate board configurations. Heuristic is
-	 * (num of 4-in-a-rows)*10000 + (num of 3-in-a-rows)*100 + (num of
-	 * 2-in-a-rows)*10 - (num of opponent 4-in-a-rows)*99999 - (num of opponent
-	 * 3-in-a-rows)*100 - (num of opponent 2-in-a-rows)*10
+	 * Simple heuristic function to evaluate board configurations.
 	 * 
 	 * @param field
 	 * @param player
@@ -28,26 +25,34 @@ public class FieldScorer
 	public FieldScore scoreField(Field field, int player)
 	{
 		int score = 0;
-		boolean hasWinner = false;
+		int winner = 0;
 
 		// Loop through each position on the board
 		for (int x = 0; x < field.getNrColumns(); x++)
 		{
-			for (int y = 0; y < field.getNrRows(); y++)
+			// From bottom row up (row 0 is the top)
+			for (int y = field.getNrRows() - 1; y >= 0; y--)
 			{
-				int positionScore = scoreRunsStartingAtPosition(x, y, field,
-						player);
+				/*
+				 * Once we hit an empty slot we can skip the rows above for this
+				 * column as they'll all be empty int disc = field.getDisc(x,
+				 * y); if (disc == 0) { break; }
+				 */
+
+				int positionScore = scoreRunsStartingAtPosition(x, y, field);
+
 				// If we find a 4 then make sure we terminate with this end of
 				// game score
-				if (positionScore >= 10000 || positionScore <= -10000)
+				if (positionScore >= FOUR_SCORE || positionScore <= -FOUR_SCORE)
 				{
-					hasWinner = true;
+					winner = field.getDisc(x, y);
 				}
+
 				score += positionScore;
 			}
 		}
 
-		return new FieldScore(score, hasWinner);
+		return new FieldScore(score, winner);
 	}
 
 	/**
@@ -59,7 +64,7 @@ public class FieldScorer
 	 * @param player
 	 * @return
 	 */
-	private int scoreRunsStartingAtPosition(int x, int y, Field field, int player)
+	private int scoreRunsStartingAtPosition(int x, int y, Field field)
 	{
 		int score = 0;
 		int disc = field.getDisc(x, y);
@@ -67,19 +72,13 @@ public class FieldScorer
 		// Only score if this position is not empty
 		if (disc != 0)
 		{
-			boolean isMaximisingPlayer = (disc == player);
+			score += horizontalScoreAt(x, y, field);
 
-			int run = lengthOfHorizontalRun(x, y, field);
-			score += scoreRun(run, isMaximisingPlayer);
+			score += verticalScoreAt(x, y, field);
 
-			run = lengthOfVerticalRun(x, y, field);
-			score += scoreRun(run, isMaximisingPlayer);
+			score += diagonalUpRightScoreAt(x, y, field);
 
-			run = lengthOfDiagonalUpRightRun(x, y, field);
-			score += scoreRun(run, isMaximisingPlayer);
-
-			run = lengthOfDiagonalDownRightRun(x, y, field);
-			score += scoreRun(run, isMaximisingPlayer);
+			score += diagonalDownRightScoreAt(x, y, field);
 
 		}
 
@@ -104,11 +103,11 @@ public class FieldScorer
 		}
 		else if (length == 3)
 		{
-			score = 100;
+			score = 1000;
 		}
 		else if (length >= 4)
 		{
-			score = 10000;
+			score = FOUR_SCORE;
 		}
 
 		// If these runs are for the other player then make negative
@@ -121,269 +120,317 @@ public class FieldScorer
 	}
 
 	/**
-	 * Is this the start of a left to right horizontal run and how long? Must
-	 * have space either side to complete the run.
+	 * Score horizontal runs starting at a given position
 	 * 
 	 * @param x
 	 * @param y
 	 * @param field
 	 * @return
 	 */
-	private int lengthOfHorizontalRun(int x, int y, Field field)
+	private int horizontalScoreAt(int x, int y, Field field)
 	{
-		int length = 0;
+		int score = 0;
 		int player = field.getDisc(x, y);
 
-		// Is this the start of a run?
+		// Is this the start of a new run?
 		if (x == 0 || field.getDisc(x - 1, y) != player)
 		{
-			// See how many tokens the same we have in a row
-			int column = x + 1;
-			while (column < field.getNrColumns()
-					&& field.getDisc(column, y) == player)
+			// How long is this run?
+			int length = 1;
+			int column = x;
+			while (length < 4 && field.getDisc(column, y) == player
+					&& column < (field.getNrColumns() - 1))
 			{
 				column += 1;
+				if (field.getDisc(column, y) == player)
+				{
+					length += 1;
+				}
 			}
-			length = (column - x);
+			int end = (x + length - 1);
 
-			// If this is less than the target then check there are enough
-			// free slots for this to be of use...
-			if (length < TARGET)
+			if (length >= 4)
 			{
-				int spaces = 0;
-				int needed = (TARGET - length);
-				// Look right
-				while (spaces < needed && column < field.getNrColumns()
-						&& (field.getDisc(column, y) == 0
-								|| field.getDisc(column, y) == player))
+				// We have a winner!
+				score = scoreRun(length, player == MAXIMISING_PLAYER);
+			}
+			else if (length == 3)
+			{
+				// Check either side for a threat
+				if (x > 0 && field.getDisc(x - 1, y) == 0)
 				{
-					spaces += 1;
-					column += 1;
+					score += scoreRun(length, player == MAXIMISING_PLAYER);
 				}
-				// Look left if needed
-				column = x - 1;
-				while (spaces < needed && column >= 0
-						&& (field.getDisc(column, y) == 0
-								|| field.getDisc(column, y) == player))
+				if (end < (field.getNrColumns() - 2)
+						&& field.getDisc(end + 1, y) == 0)
 				{
-					spaces += 1;
-					column -= 1;
-				}
-				if (spaces < needed)
-				{
-					// Doesn't count
-					length = 0;
+					score += scoreRun(length, player == MAXIMISING_PLAYER);
 				}
 			}
+			else if (length == 2)
+			{
+				// Look left
+				if (x > 1 && field.getDisc(x - 1, y) == 0)
+				{
+					if (field.getDisc(x - 2, y) == 0)
+					{
+						score += scoreRun(length, player == MAXIMISING_PLAYER);
+					}
+					else if (field.getDisc(x - 2, y) == player)
+					{
+						// What we have is a 4 with a gap so score as if it's a
+						// 3 since both are 1 away from a 4
+						score += scoreRun(length + 1,
+								player == MAXIMISING_PLAYER);
+					}
+				}
+				// Look right
+				if (end < (field.getNrColumns() - 3)
+						&& field.getDisc(end + 1, y) == 0)
+				{
+					if (field.getDisc(end + 2, y) == 0)
+					{
+						score += scoreRun(length, player == MAXIMISING_PLAYER);
+					}
+					else if (field.getDisc(end + 2, y) == player)
+					{
+						// What we have is a 4 with a gap so score as if it's a
+						// 3 since both are 1 away from a 4
+						score += scoreRun(length + 1,
+								player == MAXIMISING_PLAYER);
+					}
+				}
+			}
+
 		}
 
-		return length;
+		return score;
 	}
 
 	/**
-	 * Count vertical run from bottom to top
 	 * 
 	 * @param x
 	 * @param y
 	 * @param field
 	 * @return
 	 */
-	private int lengthOfVerticalRun(int x, int y, Field field)
+	private int verticalScoreAt(int x, int y, Field field)
 	{
-		int length = 0;
+		int score = 0;
 		int player = field.getDisc(x, y);
 
-		// Is this the start of a run?
-		if (y == 0 || field.getDisc(x, y - 1) != player)
+		// Is this a disc at the top of the column?
+		if (player != 0 && (y == 0 || field.getDisc(x, y - 1) == 0))
 		{
-			// See how many tokens the same we have in a row
-			int row = y + 1;
-			while (row < field.getNrRows() && field.getDisc(x, row) == player)
+			// How long is this run?
+			int length = 1;
+			int row = y;
+			while (length < 4 && field.getDisc(x, row) == player
+					&& row < (field.getNrRows() - 1))
 			{
 				row += 1;
+				if (field.getDisc(x, row) == player)
+				{
+					length += 1;
+				}
 			}
-			length = (row - y);
 
-			// If this is less than the target then check there are enough
-			// free slots for this to be of use...
-			if (length < TARGET)
-			{
-				int spaces = 0;
-				int needed = (TARGET - length);
-				// Look right
-				while (spaces < needed && row < field.getNrRows()
-						&& (field.getDisc(x, row) == 0
-								|| field.getDisc(x, row) == player))
-				{
-					spaces += 1;
-					row += 1;
-				}
-				// Look left if needed
-				row = y - 1;
-				while (spaces < needed && row >= 0
-						&& (field.getDisc(x, row) == 0
-								|| field.getDisc(x, row) == player))
-				{
-					spaces += 1;
-					row -= 1;
-				}
-				if (spaces < needed)
-				{
-					// Doesn't count
-					length = 0;
-				}
-			}
+			score = scoreRun(length, player == MAXIMISING_PLAYER);
 		}
 
-		return length;
+		return score;
 	}
 
 	/**
-	 * Count diagonal run going upwards and right
 	 * 
 	 * @param x
 	 * @param y
 	 * @param field
 	 * @return
 	 */
-	private int lengthOfDiagonalUpRightRun(int x, int y, Field field)
+	private int diagonalUpRightScoreAt(int x, int y, Field field)
 	{
-		int length = 0;
+		int score = 0;
+
 		int player = field.getDisc(x, y);
 
-		int column = x;
-		int row = y;
-		boolean check = false;
-		if (x > 0 && y < (field.getNrRows() - 1))
+		// Is this the start of a new run?
+		if (x == 0 || y == field.getNrRows() - 1
+				|| field.getDisc(x - 1, y + 1) != player)
 		{
-			column = x - 1;
-			row = y + 1;
-			check = true;
-		}
-
-		// Is this the start of a run?
-		if (!check || field.getDisc(column, row) != player)
-		{
-			// See how many tokens the same we have in a row
-			column = x + 1;
-			row = y - 1;
-			while (column < field.getNrColumns() && row > 0
-					&& field.getDisc(column, row) == player)
+			// How long is this run?
+			int length = 1;
+			int column = x;
+			int row = y;
+			while (length < 4 && field.getDisc(column, row) == player
+					&& column < (field.getNrColumns() - 1) && row > 0)
 			{
 				column += 1;
 				row -= 1;
+				if (field.getDisc(column, row) == player)
+				{
+					length += 1;
+				}
 			}
-			length = (column - x);
+			int endColumn = (x + length - 1);
+			int endRow = (y - length + 1);
 
-			// If this is less than the target then check there are enough
-			// free slots for this to be of use...
-			if (length < TARGET)
+			if (length >= 4)
 			{
-				int spaces = 0;
-				int needed = (TARGET - length);
-				// Look right
-				while (spaces < needed && column < field.getNrColumns()
-						&& row > 0 && (field.getDisc(column, row) == 0
-								|| field.getDisc(column, row) == player))
+				// We have a winner!
+				score = scoreRun(length, player == MAXIMISING_PLAYER);
+			}
+			else if (length == 3)
+			{
+				// Check either side for a threat
+				if (x > 0 && y < (field.getNrRows() - 2)
+						&& field.getDisc(x - 1, y + 1) == 0)
 				{
-					spaces += 1;
-					column += 1;
-					row -= 1;
+					score += scoreRun(length, player == MAXIMISING_PLAYER);
 				}
-				// Look left if needed
-				column = x - 1;
-				row = y + 1;
-				while (spaces < needed && column >= 0 && row < field.getNrRows()
-						&& (field.getDisc(column, row) == 0
-								|| field.getDisc(column, row) == player))
+				if (endColumn < (field.getNrColumns() - 2) && endRow > 0
+						&& field.getDisc(endColumn + 1, endRow - 1) == 0)
 				{
-					spaces += 1;
-					column -= 1;
-					row += 1;
-				}
-				if (spaces < needed)
-				{
-					// Doesn't count
-					length = 0;
+					score += scoreRun(length, player == MAXIMISING_PLAYER);
 				}
 			}
+			else if (length == 2)
+			{
+				// Look left
+				if (x > 1 && y < (field.getNrRows() - 2)
+						&& field.getDisc(x - 1, y + 1) == 0)
+				{
+					int endDisc = field.getDisc(x - 2, y + 2);
+					if (endDisc == 0)
+					{
+						score += scoreRun(length, player == MAXIMISING_PLAYER);
+					}
+					else if (endDisc == player)
+					{
+						// What we have is a 4 with a gap so score as if it's a
+						// 3 since both are 1 away from a 4
+						score += scoreRun(length + 1,
+								player == MAXIMISING_PLAYER);
+					}
+				}
+				// Look right
+				if (endColumn < (field.getNrColumns() - 4) && endRow > 3
+						&& field.getDisc(endColumn + 1, endRow - 1) == 0)
+				{
+					int endDisc = field.getDisc(x + 2, y - 2);
+					if (endDisc == 0)
+					{
+						score += scoreRun(length, player == MAXIMISING_PLAYER);
+					}
+					else if (endDisc == player)
+					{
+						// What we have is a 4 with a gap so score as if it's a
+						// 3 since both are 1 away from a 4
+						score += scoreRun(length + 1,
+								player == MAXIMISING_PLAYER);
+					}
+				}
+			}
+
 		}
 
-		return length;
+		return score;
 	}
 
 	/**
-	 * Count diagonal run going downwards and right
 	 * 
 	 * @param x
 	 * @param y
 	 * @param field
 	 * @return
 	 */
-	private int lengthOfDiagonalDownRightRun(int x, int y, Field field)
+	private int diagonalDownRightScoreAt(int x, int y, Field field)
 	{
-		int length = 0;
+		int score = 0;
+
 		int player = field.getDisc(x, y);
 
-		int column = x;
-		int row = y;
-		boolean check = false;
-		if (x > 0 && y > 0)
+		// Is this the start of a new run?
+		if (x == 0 || y == 0 || field.getDisc(x - 1, y - 1) != player)
 		{
-			column = x - 1;
-			row = y - 1;
-			check = true;
-		}
-
-		// Is this the start of a run?
-		if (!check || field.getDisc(column, row) != player)
-		{
-			// See how many tokens the same we have in a row
-			column = x + 1;
-			row = y + 1;
-			while (column < field.getNrColumns() && row < field.getNrRows()
-					&& field.getDisc(column, row) == player)
+			// How long is this run?
+			int length = 1;
+			int column = x;
+			int row = y;
+			while (length < 4 && field.getDisc(column, row) == player
+					&& column < (field.getNrColumns() - 1)
+					&& row < (field.getNrRows() - 1))
 			{
 				column += 1;
 				row += 1;
+				if (field.getDisc(column, row) == player)
+				{
+					length += 1;
+				}
 			}
-			length = (column - x);
+			int endColumn = (x + length - 1);
+			int endRow = (y + length - 1);
 
-			// If this is less than the target then check there are enough
-			// free slots for this to be of use...
-			if (length < TARGET)
+			if (length >= 4)
 			{
-				int spaces = 0;
-				int needed = (TARGET - length);
-				// Look right
-				while (spaces < needed && column < field.getNrColumns()
-						&& row > field.getNrRows()
-						&& (field.getDisc(column, row) == 0
-								|| field.getDisc(column, row) == player))
+				// We have a winner!
+				score = scoreRun(length, player == MAXIMISING_PLAYER);
+			}
+			else if (length == 3)
+			{
+				// Check either side for a threat
+				if (x > 0 && y > 0 && field.getDisc(x - 1, y - 1) == 0)
 				{
-					spaces += 1;
-					column += 1;
-					row += 1;
+					score += scoreRun(length, player == MAXIMISING_PLAYER);
 				}
-				// Look left if needed
-				column = x - 1;
-				row = y - 1;
-				while (spaces < needed && column >= 0 && row >= 0
-						&& (field.getDisc(column, row) == 0
-								|| field.getDisc(column, row) == player))
+				if (endColumn < (field.getNrColumns() - 2)
+						&& endRow < (field.getNrRows() - 2)
+						&& field.getDisc(endColumn + 1, endRow + 1) == 0)
 				{
-					spaces += 1;
-					column -= 1;
-					row -= 1;
-				}
-				if (spaces < needed)
-				{
-					// Doesn't count
-					length = 0;
+					score += scoreRun(length, player == MAXIMISING_PLAYER);
 				}
 			}
+			else if (length == 2)
+			{
+				// Look left
+				if (x > 1 && y > 1 && field.getDisc(x - 1, y - 1) == 0)
+				{
+					int endDisc = field.getDisc(x - 2, y - 2);
+					if (endDisc == 0)
+					{
+						score += scoreRun(length, player == MAXIMISING_PLAYER);
+					}
+					else if (endDisc == player)
+					{
+						// What we have is a 4 with a gap so score as if it's a
+						// 3 since both are 1 away from a 4
+						score += scoreRun(length + 1,
+								player == MAXIMISING_PLAYER);
+					}
+				}
+				// Look right
+				if (endColumn < (field.getNrColumns() - 4)
+						&& endRow < (field.getNrRows() - 4)
+						&& field.getDisc(endColumn + 1, endRow + 1) == 0)
+				{
+					int endDisc = field.getDisc(x + 2, y + 2);
+					if (endDisc == 0)
+					{
+						score += scoreRun(length, player == MAXIMISING_PLAYER);
+					}
+					else if (endDisc == player)
+					{
+						// What we have is a 4 with a gap so score as if it's a
+						// 3 since both are 1 away from a 4
+						score += scoreRun(length + 1,
+								player == MAXIMISING_PLAYER);
+					}
+				}
+			}
+
 		}
 
-		return length;
+		return score;
 	}
+
 }

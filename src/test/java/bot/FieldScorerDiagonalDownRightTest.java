@@ -29,12 +29,14 @@ public class FieldScorerDiagonalDownRightTest
 
 		int score1 = scorer.scoreField(field, PLAYER).getScore();
 		System.out.println("Score 1: " + score1);
+		field.printField();
 
 		field.parseFromString(
 				"0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,0,0,1,0,0;0,0,0,0,0,1,0;0,0,0,0,0,0,1");
 
 		int score2 = scorer.scoreField(field, PLAYER).getScore();
 		System.out.println("Score 2: " + score2);
+		field.printField();
 
 		assertTrue(score1 > score2);
 	}

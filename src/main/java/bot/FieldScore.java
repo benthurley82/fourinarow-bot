@@ -10,11 +10,13 @@ public final class FieldScore
 {
 	private final int		score;
 	private final boolean	hasWinner;
+	private final int		winner;
 
-	public FieldScore(int score, boolean hasWinner)
+	public FieldScore(int score, int winner)
 	{
 		this.score = score;
-		this.hasWinner = hasWinner;
+		this.winner = winner;
+		this.hasWinner = (winner != 0);
 	}
 
 	public int getScore()
@@ -25,5 +27,10 @@ public final class FieldScore
 	public boolean hasWinner()
 	{
 		return hasWinner;
+	}
+
+	public int getWinner()
+	{
+		return winner;
 	}
 }
