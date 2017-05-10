@@ -15,7 +15,7 @@ public class MoveEngine
 	private FieldScorer			rating				= new FieldScorer();
 	private int					nodes				= 0;
 
-	private static final int	DEPTH				= 6;
+	private static final int	DEPTH				= 9;
 	private static final int	MAXIMISING_PLAYER	= 1;
 	private static final int	MINIMISING_PLAYER	= 2;
 
@@ -35,7 +35,8 @@ public class MoveEngine
 		int move = middleColumn;
 		if (field.getDisc(middleColumn, field.getNrRows() - 1) != 0)
 		{
-			move = minimax(DEPTH, field, myId);
+			move = minimax(DEPTH, field, myId, Integer.MIN_VALUE,
+					Integer.MAX_VALUE);
 		}
 		System.err.println("Nodes: " + nodes);
 
@@ -52,7 +53,7 @@ public class MoveEngine
 	 * @param disc
 	 * @return
 	 */
-	private int minimax(int depth, Field field, int disc)
+	private int minimax(int depth, Field field, int disc, int alpha, int beta)
 	{
 		int bestScore = 0;
 		int bestMove = -1;
@@ -86,7 +87,7 @@ public class MoveEngine
 				{
 					clonedField.addDisc(move, disc);
 					int moveScore = minimax(depth - 1, clonedField,
-							MINIMISING_PLAYER);
+							MINIMISING_PLAYER, alpha, beta);
 					if (depth == DEPTH)
 					{
 						System.err.println("Move " + move + ": " + moveScore);
@@ -96,6 +97,9 @@ public class MoveEngine
 						bestScore = moveScore;
 						bestMove = move;
 					}
+					alpha = Math.max(alpha, bestScore);
+					if (alpha >= beta)
+						break;
 					clonedField.undoAddDisc(move);
 				}
 			}
@@ -106,7 +110,7 @@ public class MoveEngine
 				{
 					clonedField.addDisc(move, disc);
 					int moveScore = minimax(depth - 1, clonedField,
-							MAXIMISING_PLAYER);
+							MAXIMISING_PLAYER, alpha, beta);
 					if (depth == DEPTH)
 					{
 						System.err.println("Move " + move + ": " + moveScore);
@@ -116,6 +120,9 @@ public class MoveEngine
 						bestScore = moveScore;
 						bestMove = move;
 					}
+					beta = Math.min(beta, bestScore);
+					if (alpha >= beta)
+						break;
 					clonedField.undoAddDisc(move);
 				}
 			}
