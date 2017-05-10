@@ -13,6 +13,8 @@ public class MoveEngine
 {
 
 	private FieldScorer			rating				= new FieldScorer();
+	private int					nodes				= 0;
+
 	private static final int	DEPTH				= 6;
 	private static final int	MAXIMISING_PLAYER	= 1;
 	private static final int	MINIMISING_PLAYER	= 2;
@@ -27,6 +29,7 @@ public class MoveEngine
 	 */
 	public int makeTurn(int round, Field field, int myId)
 	{
+		nodes = 0;
 		// Default to middle column if empty
 		int middleColumn = Math.floorDiv(field.getNrColumns(), 2);
 		int move = middleColumn;
@@ -34,6 +37,7 @@ public class MoveEngine
 		{
 			move = minimax(DEPTH, field, myId);
 		}
+		System.err.println("Nodes: " + nodes);
 
 		return move;
 	}
@@ -52,6 +56,7 @@ public class MoveEngine
 	{
 		int bestScore = 0;
 		int bestMove = -1;
+		nodes += 1;
 
 		// If depth=0 or end of game then return the score
 		FieldScore currentScore = rating.scoreField(field, MAXIMISING_PLAYER);
@@ -82,6 +87,10 @@ public class MoveEngine
 					clonedField.addDisc(move, disc);
 					int moveScore = minimax(depth - 1, clonedField,
 							MINIMISING_PLAYER);
+					if (depth == DEPTH)
+					{
+						System.err.println("Move " + move + ": " + moveScore);
+					}
 					if (moveScore > bestScore)
 					{
 						bestScore = moveScore;
@@ -98,6 +107,10 @@ public class MoveEngine
 					clonedField.addDisc(move, disc);
 					int moveScore = minimax(depth - 1, clonedField,
 							MAXIMISING_PLAYER);
+					if (depth == DEPTH)
+					{
+						System.err.println("Move " + move + ": " + moveScore);
+					}
 					if (moveScore < bestScore)
 					{
 						bestScore = moveScore;
