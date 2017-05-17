@@ -104,15 +104,14 @@ public class FieldScorerDiagonalUpRightTest
 	{
 		field.parseFromString(
 				"0,0,0,0,0,0,0;0,0,0,0,2,0,0;0,0,0,1,0,0,0;0,0,1,0,0,0,0;0,1,0,0,0,0,0;2,0,0,0,0,0,0");
-		String[] rows = field.toString().split(";");
-		for (String row : rows)
-		{
-			System.out.println(row);
-		}
 		int score1 = scorer.scoreField(field, PLAYER).getScore();
 		System.out.println("Score 1: " + score1);
+		field.parseFromString(
+				"0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,0,1,0,0,0;0,0,1,0,0,0,0;0,1,0,0,0,0,0;2,0,0,0,0,0,0");
+		int score2 = scorer.scoreField(field, PLAYER).getScore();
+		System.out.println("Score 2: " + score2);
 
-		assertTrue(score1 == 0);
+		assertTrue(score1 < score2);
 	}
 
 	/**
@@ -126,8 +125,13 @@ public class FieldScorerDiagonalUpRightTest
 
 		int score1 = scorer.scoreField(field, PLAYER).getScore();
 		System.out.println("Score 1: " + score1);
+		field.parseFromString(
+				"0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,1,0,0,0,0;0,1,0,0,0,0,0;2,0,0,0,0,0,0");
 
-		assertTrue(score1 == 0);
+		int score2 = scorer.scoreField(field, PLAYER).getScore();
+		System.out.println("Score 2: " + score2);
+
+		assertTrue(score1 < score2);
 	}
 
 }

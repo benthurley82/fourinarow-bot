@@ -41,9 +41,11 @@ public class GameLossesTest
 		int move = mover.makeTurn(15, field, 1);
 		System.out.println(move);
 
-		assertEquals(
-				"Need to go in column 2 to block player 2 setting up the win",
-				2, move);
+		assertNotEquals("Need to go in column 0 or 3", 1, move);
+		assertNotEquals("Need to go in column 0 or 3", 2, move);
+		assertNotEquals("Need to go in column 0 or 3", 4, move);
+		assertNotEquals("Need to go in column 0 or 3", 5, move);
+		assertNotEquals("Need to go in column 0 or 3", 6, move);
 	}
 
 	@Test
@@ -181,7 +183,7 @@ public class GameLossesTest
 		int move = mover.makeTurn(10, field, 2);
 		System.out.println(move);
 
-		assertEquals("Need to go in column 5", 5, move);
+		assertEquals("Need to go in column 4", 4, move);
 	}
 
 }

@@ -1,6 +1,7 @@
 package bot;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -76,7 +77,8 @@ public class MoveEngineTest
 		int move = mover.makeTurn(24, field, 1);
 		System.out.println(move);
 
-		assertEquals("Needs to go in column 3 to setup the win", 3, move);
+		assertTrue("Needs to go in column 3 or 6 to setup the win",
+				move == 3 || move == 6);
 	}
 
 	@Test

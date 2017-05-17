@@ -13,7 +13,11 @@ public class FieldScorer
 {
 
 	private static final int	MAXIMISING_PLAYER	= 1;
-	private static final int	FOUR_SCORE			= 100000;
+	private static final int	MINIMISING_PLAYER	= 2;
+	private static final int	FOUR_SCORE			= 1000000;
+	private static final int	THREE_SCORE			= 10000;
+	private static final int	TWO_SCORE			= 100;
+	private static final int	ONE_SCORE			= 1;
 
 	/**
 	 * Simple heuristic function to evaluate board configurations.
@@ -97,13 +101,17 @@ public class FieldScorer
 	{
 		int score = 0;
 
+		if (length == 1)
+		{
+			score = ONE_SCORE;
+		}
 		if (length == 2)
 		{
-			score = 10;
+			score = TWO_SCORE;
 		}
 		else if (length == 3)
 		{
-			score = 1000;
+			score = THREE_SCORE;
 		}
 		else if (length >= 4)
 		{
@@ -136,15 +144,15 @@ public class FieldScorer
 		if (x == 0 || field.getDisc(x - 1, y) != player)
 		{
 			// How long is this run?
-			int length = 1;
+			int length = 0;
 			int column = x;
-			while (length < 4 && field.getDisc(column, y) == player
-					&& column < (field.getNrColumns() - 1))
+			while (length < 4 && column < (field.getNrColumns())
+					&& field.getDisc(column, y) == player)
 			{
-				column += 1;
 				if (field.getDisc(column, y) == player)
 				{
 					length += 1;
+					column += 1;
 				}
 			}
 			int end = (x + length - 1);
@@ -201,6 +209,25 @@ public class FieldScorer
 					}
 				}
 			}
+			else if (length == 1)
+			{
+				int opponent = getOpponent(player);
+				// Look left
+				if (x > 2 && field.getDisc(x - 1, y) == 0
+						&& field.getDisc(x - 2, y) != opponent
+						&& field.getDisc(x - 3, y) != opponent)
+				{
+					score += scoreRun(length, player == MAXIMISING_PLAYER);
+				}
+				// Look right
+				if (end < (field.getNrColumns() - 3)
+						&& field.getDisc(end + 1, y) == 0
+						&& field.getDisc(x + 2, y) != opponent
+						&& field.getDisc(x + 3, y) != opponent)
+				{
+					score += scoreRun(length, player == MAXIMISING_PLAYER);
+				}
+			}
 
 		}
 
@@ -223,19 +250,22 @@ public class FieldScorer
 		if (player != 0 && (y == 0 || field.getDisc(x, y - 1) == 0))
 		{
 			// How long is this run?
-			int length = 1;
+			int length = 0;
 			int row = y;
-			while (length < 4 && field.getDisc(x, row) == player
-					&& row < (field.getNrRows() - 1))
+			while (length < 4 && row < (field.getNrRows())
+					&& field.getDisc(x, row) == player)
 			{
-				row += 1;
 				if (field.getDisc(x, row) == player)
 				{
 					length += 1;
+					row += 1;
 				}
 			}
 
-			score = scoreRun(length, player == MAXIMISING_PLAYER);
+			if (length >= 4 || (length + y >= 4))
+			{
+				score = scoreRun(length, player == MAXIMISING_PLAYER);
+			}
 		}
 
 		return score;
@@ -259,17 +289,17 @@ public class FieldScorer
 				|| field.getDisc(x - 1, y + 1) != player)
 		{
 			// How long is this run?
-			int length = 1;
+			int length = 0;
 			int column = x;
 			int row = y;
-			while (length < 4 && field.getDisc(column, row) == player
-					&& column < (field.getNrColumns() - 1) && row > 0)
+			while (length < 4 && column < (field.getNrColumns()) && row >= 0
+					&& field.getDisc(column, row) == player)
 			{
-				column += 1;
-				row -= 1;
 				if (field.getDisc(column, row) == player)
 				{
 					length += 1;
+					column += 1;
+					row -= 1;
 				}
 			}
 			int endColumn = (x + length - 1);
@@ -331,6 +361,26 @@ public class FieldScorer
 					}
 				}
 			}
+			else if (length == 1)
+			{
+				int opponent = getOpponent(player);
+				// Look left
+				if (x > 2 && y < (field.getNrRows() - 3)
+						&& field.getDisc(x - 1, y + 1) == 0
+						&& field.getDisc(x - 2, y + 2) != opponent
+						&& field.getDisc(x - 3, y + 3) != opponent)
+				{
+					score += scoreRun(length, player == MAXIMISING_PLAYER);
+				}
+				// Look right
+				if (endColumn < (field.getNrColumns() - 3) && endRow > 2
+						&& field.getDisc(endColumn + 1, y - 1) == 0
+						&& field.getDisc(x + 2, y - 1) != opponent
+						&& field.getDisc(x + 3, y - 1) != opponent)
+				{
+					score += scoreRun(length, player == MAXIMISING_PLAYER);
+				}
+			}
 
 		}
 
@@ -354,18 +404,19 @@ public class FieldScorer
 		if (x == 0 || y == 0 || field.getDisc(x - 1, y - 1) != player)
 		{
 			// How long is this run?
-			int length = 1;
+			int length = 0;
 			int column = x;
 			int row = y;
-			while (length < 4 && field.getDisc(column, row) == player
-					&& column < (field.getNrColumns() - 1)
-					&& row < (field.getNrRows() - 1))
+			while (length < 4 && column < (field.getNrColumns())
+					&& row < (field.getNrRows())
+					&& field.getDisc(column, row) == player)
 			{
-				column += 1;
-				row += 1;
+
 				if (field.getDisc(column, row) == player)
 				{
 					length += 1;
+					column += 1;
+					row += 1;
 				}
 			}
 			int endColumn = (x + length - 1);
@@ -427,10 +478,42 @@ public class FieldScorer
 					}
 				}
 			}
+			else if (length == 1)
+			{
+				int opponent = getOpponent(player);
+				// Look left
+				if (x > 2 && y > 2 && field.getDisc(x - 1, y - 1) == 0
+						&& field.getDisc(x - 2, y - 2) != opponent
+						&& field.getDisc(x - 3, y - 3) != opponent)
+				{
+					score += scoreRun(length, player == MAXIMISING_PLAYER);
+				}
+				// Look right
+				if (endColumn < (field.getNrColumns() - 3)
+						&& endRow < (field.getNrRows() - 3)
+						&& field.getDisc(endColumn + 1, y + 1) == 0
+						&& field.getDisc(x + 2, y + 1) != opponent
+						&& field.getDisc(x + 3, y + 1) != opponent)
+				{
+					score += scoreRun(length, player == MAXIMISING_PLAYER);
+				}
+			}
 
 		}
 
 		return score;
+	}
+
+	private int getOpponent(int player)
+	{
+		if (player == MAXIMISING_PLAYER)
+		{
+			return MINIMISING_PLAYER;
+		}
+		else
+		{
+			return MAXIMISING_PLAYER;
+		}
 	}
 
 }

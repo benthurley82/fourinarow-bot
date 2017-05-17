@@ -15,7 +15,7 @@ public class MoveEngine
 	private FieldScorer			rating				= new FieldScorer();
 	private int					nodes				= 0;
 
-	private static final int	DEPTH				= 9;
+	private static final int	DEPTH				= 8;
 	private static final int	MAXIMISING_PLAYER	= 1;
 	private static final int	MINIMISING_PLAYER	= 2;
 
